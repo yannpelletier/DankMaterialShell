@@ -262,6 +262,14 @@ DankPopout {
 
                             target: appDrawerPopout
                         }
+
+                        Connections {
+                            function onSearchQueryChanged() {
+                                searchField.text = appLauncher.searchQuery
+                            }
+
+                            target: appLauncher
+                        }
                     }
 
                     Row {

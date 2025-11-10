@@ -184,7 +184,14 @@ Item {
             return
         }
         keyboardNavigationActive = true
-        selectedIndex = viewMode === "grid" ? Math.min(selectedIndex + gridColumns, filteredModel.count - 1) : Math.min(selectedIndex + 1, filteredModel.count - 1)
+
+        const increment = viewMode === "grid" ? gridColumns : 1
+        for (let i = selectedIndex + increment; i < filteredModel.count; i += increment) {
+            if (filteredModel.get(i).exec) {
+                selectedIndex = i
+                break
+            }
+        }
     }
 
     function selectPrevious() {
@@ -192,7 +199,14 @@ Item {
             return
         }
         keyboardNavigationActive = true
-        selectedIndex = viewMode === "grid" ? Math.max(selectedIndex - gridColumns, 0) : Math.max(selectedIndex - 1, 0)
+
+        const increment = viewMode === "grid" ? gridColumns : 1
+        for (let i = selectedIndex - increment; i >= 0; i -= increment) {
+            if (filteredModel.get(i).exec) {
+                selectedIndex = i
+                break
+            }
+        }
     }
 
     function selectNextInRow() {
@@ -200,7 +214,13 @@ Item {
             return
         }
         keyboardNavigationActive = true
-        selectedIndex = Math.min(selectedIndex + 1, filteredModel.count - 1)
+
+        for (let i = selectedIndex + 1; i < filteredModel.count; i++) {
+            if (filteredModel.get(i).exec) {
+                selectedIndex = i
+                break
+            }
+        }
     }
 
     function selectPreviousInRow() {
@@ -208,7 +228,13 @@ Item {
             return
         }
         keyboardNavigationActive = true
-        selectedIndex = Math.max(selectedIndex - 1, 0)
+
+        for (let i = selectedIndex - 1; i >= 0; i--) {
+            if (filteredModel.get(i).exec) {
+                selectedIndex = i
+                break
+            }
+        }
     }
 
     function launchSelected() {
@@ -229,11 +255,25 @@ Item {
 
         if (appData.isPlugin) {
             const pluginId = getPluginIdForItem(actualApp)
-            if (pluginId) {
-                AppSearchService.executePluginItem(actualApp, pluginId)
-                appLaunched(appData)
+            if (!pluginId) {
                 return
             }
+
+            const actionParts = actualApp.action.split(":")
+            const actionType = actionParts[0]
+            const actionData = actionParts.slice(1).join(":")
+
+            if (actionType === "query") {
+                root.searchQuery = actionData
+                updateFilteredModel()
+                return
+            } else if (actionType.startsWith("hold-")) {
+                AppSearchService.executePluginItem(actualApp, pluginId)
+                updateFilteredModel()
+                return
+            }
+
+            appLaunched(appData)
         } else {
             SessionService.launchDesktopEntry(actualApp)
             appLaunched(appData)

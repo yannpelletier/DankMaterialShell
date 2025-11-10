@@ -36,7 +36,7 @@ Rectangle {
     width: cellWidth - cellPadding
     height: cellHeight - cellPadding
     radius: Theme.cornerRadius
-    color: currentIndex === index ? Theme.withAlpha(Theme.surfaceContainerHighest, Theme.popupTransparency) : mouseArea.containsMouse ? Theme.withAlpha(Theme.surfaceContainerHighest, Theme.popupTransparency) : Theme.withAlpha(Theme.surfaceContainerHigh, Theme.popupTransparency)
+    color: !model.exec ? "transparent" : currentIndex === index ? Theme.withAlpha(Theme.surfaceContainerHighest, Theme.popupTransparency) : mouseArea.containsMouse ? Theme.withAlpha(Theme.surfaceContainerHighest, Theme.popupTransparency) : Theme.withAlpha(Theme.surfaceContainerHigh, Theme.popupTransparency)
 
     Column {
         anchors.centerIn: parent
@@ -77,12 +77,14 @@ Rectangle {
     MouseArea {
         id: mouseArea
 
+        enabled: !!model.exec
+
         anchors.fill: parent
         anchors.leftMargin: root.mouseAreaLeftMargin
         anchors.rightMargin: root.mouseAreaRightMargin
         anchors.bottomMargin: root.mouseAreaBottomMargin
         hoverEnabled: true
-        cursorShape: Qt.PointingHandCursor
+        cursorShape: model.exec ? Qt.PointingHandCursor : Qt.ArrowCursor
         acceptedButtons: Qt.LeftButton | Qt.RightButton
         z: 10
         onEntered: {
