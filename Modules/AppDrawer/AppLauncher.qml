@@ -187,7 +187,7 @@ Item {
 
         const increment = viewMode === "grid" ? gridColumns : 1
         for (let i = selectedIndex + increment; i < filteredModel.count; i += increment) {
-            if (filteredModel.get(i).exec) {
+            if (filteredModel.get(i).exec || i === filteredModel.count - 1) {
                 selectedIndex = i
                 break
             }
@@ -202,7 +202,7 @@ Item {
 
         const increment = viewMode === "grid" ? gridColumns : 1
         for (let i = selectedIndex - increment; i >= 0; i -= increment) {
-            if (filteredModel.get(i).exec) {
+            if (filteredModel.get(i).exec || i === 0) {
                 selectedIndex = i
                 break
             }
@@ -216,7 +216,7 @@ Item {
         keyboardNavigationActive = true
 
         for (let i = selectedIndex + 1; i < filteredModel.count; i++) {
-            if (filteredModel.get(i).exec) {
+            if (filteredModel.get(i).exec || i === filteredModel.count - 1) {
                 selectedIndex = i
                 break
             }
@@ -230,7 +230,7 @@ Item {
         keyboardNavigationActive = true
 
         for (let i = selectedIndex - 1; i >= 0; i--) {
-            if (filteredModel.get(i).exec) {
+            if (filteredModel.get(i).exec || i === 0) {
                 selectedIndex = i
                 break
             }
@@ -273,6 +273,7 @@ Item {
                 return
             }
 
+            AppSearchService.executePluginItem(actualApp, pluginId)
             appLaunched(appData)
         } else {
             SessionService.launchDesktopEntry(actualApp)
