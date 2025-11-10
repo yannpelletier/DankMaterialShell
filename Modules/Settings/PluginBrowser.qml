@@ -110,11 +110,27 @@ DankModal {
             parentModal.shouldHaveFocus = Qt.binding(() => {
                 return parentModal.shouldBeVisible
             })
+            Qt.callLater(() => {
+                if (parentModal.modalFocusScope) {
+                    parentModal.modalFocusScope.forceActiveFocus()
+                }
+            })
         }
     }
 
     onOpened: {
         refreshPlugins()
+    }
+
+    Connections {
+        target: contentLoader
+        function onLoaded() {
+            Qt.callLater(() => {
+                if (contentLoader.item && contentLoader.item.searchField) {
+                    contentLoader.item.searchField.forceActiveFocus()
+                }
+            })
+        }
     }
 
     onDialogClosed: () => {
@@ -137,6 +153,10 @@ DankModal {
 
             anchors.fill: parent
             focus: true
+
+            Component.onCompleted: {
+                browserSearchField.forceActiveFocus()
+            }
 
             Keys.onPressed: event => {
                 if (event.key === Qt.Key_Escape) {
