@@ -22,6 +22,7 @@ Item {
     property int debounceInterval: 50
     property bool keyboardNavigationActive: false
     property bool suppressUpdatesWhileLaunching: false
+    property bool skipClose: false
     property var categories: {
         const allCategories = AppSearchService.getAllCategories().filter(cat => cat !== "Education" && cat !== "Science")
         const result = [I18n.tr("All")]
@@ -60,7 +61,37 @@ Item {
         }
     }
 
+    QtObject {
+        id: launcherContext
 
+        function setSearchQuery(query) {
+            if (typeof query !== "string") {
+                console.warn("LauncherContext: setSearchQuery called with invalid query:", query)
+                return
+            }
+
+            searchQuery = query
+            updateFilteredModel()
+        }
+
+        function refreshItems() {
+            updateFilteredModel()
+        }
+
+        function preventClose() {
+            skipClose = true
+        }
+    }
+
+    component LauncherContext: Item {
+        function setSearchQuery(query) {
+            if (!query || typeof query !== "string") {
+                console.warn("LauncherContext: setSearchQuery called with invalid query:", query)
+                return
+            }
+            root.searchQuery = query
+        }
+    }
 
     function updateFilteredModel() {
         if (suppressUpdatesWhileLaunching) {
@@ -187,7 +218,7 @@ Item {
 
         const increment = viewMode === "grid" ? gridColumns : 1
         for (let i = selectedIndex + increment; i < filteredModel.count; i += increment) {
-            if (filteredModel.get(i).exec || i === filteredModel.count - 1) {
+            if (filteredModel.get(i).exec) {
                 selectedIndex = i
                 break
             }
@@ -202,7 +233,7 @@ Item {
 
         const increment = viewMode === "grid" ? gridColumns : 1
         for (let i = selectedIndex - increment; i >= 0; i -= increment) {
-            if (filteredModel.get(i).exec || i === 0) {
+            if (filteredModel.get(i).exec) {
                 selectedIndex = i
                 break
             }
@@ -216,7 +247,7 @@ Item {
         keyboardNavigationActive = true
 
         for (let i = selectedIndex + 1; i < filteredModel.count; i++) {
-            if (filteredModel.get(i).exec || i === filteredModel.count - 1) {
+            if (filteredModel.get(i).exec) {
                 selectedIndex = i
                 break
             }
@@ -230,7 +261,7 @@ Item {
         keyboardNavigationActive = true
 
         for (let i = selectedIndex - 1; i >= 0; i--) {
-            if (filteredModel.get(i).exec || i === 0) {
+            if (filteredModel.get(i).exec) {
                 selectedIndex = i
                 break
             }
@@ -259,22 +290,11 @@ Item {
                 return
             }
 
-            const actionParts = actualApp.action.split(":")
-            const actionType = actionParts[0]
-            const actionData = actionParts.slice(1).join(":")
-
-            if (actionType === "query") {
-                root.searchQuery = actionData
-                updateFilteredModel()
-                return
-            } else if (actionType.startsWith("hold-")) {
-                AppSearchService.executePluginItem(actualApp, pluginId)
-                updateFilteredModel()
-                return
+            skipClose = false
+            AppSearchService.executePluginItem(launcherContext, actualApp, pluginId)
+            if (!skipClose) {
+              appLaunched(appData)
             }
-
-            AppSearchService.executePluginItem(actualApp, pluginId)
-            appLaunched(appData)
         } else {
             SessionService.launchDesktopEntry(actualApp)
             appLaunched(appData)

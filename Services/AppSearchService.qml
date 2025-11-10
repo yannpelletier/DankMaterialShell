@@ -336,7 +336,7 @@ Singleton {
         return []
     }
 
-    function executePluginItem(item, pluginId) {
+    function executePluginItem(launcherContext, item, pluginId) {
         if (typeof PluginService === "undefined") return false
 
         const component = PluginService.pluginLauncherComponents[pluginId]
@@ -348,7 +348,7 @@ Singleton {
             })
 
             if (instance && typeof instance.executeItem === "function") {
-                instance.executeItem(item)
+                instance.executeItem(item, launcherContext)
                 instance.destroy()
                 return true
             }
